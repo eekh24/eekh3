@@ -137,6 +137,12 @@
             align-self: stretch;
         }
 
+        #adminPanelContainer button {
+            width: calc(90% / 3);
+
+            align-self: stretch;
+        }
+
         .order-actions button {
             width: calc(90% / 2);
 
@@ -191,6 +197,26 @@
         .pending-order-item {
             margin-top: 15px;
         }
+
+        .confirm {
+            height: 150px;
+            width: 250px;
+            background-color: white;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+
+        .confirmButton {
+            width: 100px;
+        }
     </style>
 </head>
 
@@ -206,10 +232,10 @@
             <input type="number" id="mobileNumber" required placeholder="Please Enter Mobile Number" maxlength="10" />
         </fieldset>
         <div class="order-actions">
-            <button onclick="fetchData()">Fetch Data</button>
-            <button onclick="goInside()"> Go Inside </button>
+            <button id="fetchDataButton" onclick="fetchData()">Fetch Data</button>
+            <button id="goInsideButton" onclick="goInside()"> Go Inside </button>
         </div>
-        <a href="addItem.html"><button>Add New Item</button></a>
+        <a href="addItem.html"><button id="addItemButton">Add New Item</button></a>
         <button id="loadOrdersButton" onclick="loadPendingOrders()">All Recent Orders</button>
 
 
@@ -217,6 +243,13 @@
         <div id="dataContainer"></div>
         <div id="cartContainer"></div>
         <div id="ordersContainer"></div>
+
+        <div class="confirm">
+            <img style="position: absolute; top: 10px; right: 10px; height: 10px; width:10px;" src="crossImage.png"
+                alt="" onclick="closeConfirm()">
+            <h1>Are You sure?</h1>
+            <button class="confirmButton"><span>Confirm</span></button>
+        </div>
     </div>
 
     <script type="module">
@@ -236,9 +269,32 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        function closeConfirm() {
+            document.querySelector('.confirm').style.display = 'none';
+        }
+        window.closeConfirm = closeConfirm;
+
         async function loadPendingOrders() {
+            const fetchDataButton = document.getElementById('fetchDataButton');
+            // fetchDataButton.disabled = true; // Disable the button while processing
+            fetchDataButton.style.backgroundColor = 'grey'
+            const goInsideButton = document.getElementById('goInsideButton');
+            // goInsideButton.disabled = true;
+            goInsideButton.style.backgroundColor = 'grey'
+            const addItemButton = document.getElementById('addItemButton');
+            // addItemButton.disabled = true;
+            addItemButton.style.backgroundColor = 'grey'
+            const loadOrdersButton = document.getElementById('loadOrdersButton');
+            // loadOrdersButton.disabled = true;
+            loadOrdersButton.style.backgroundColor = 'green' // Disable the button immediately after the first click
+
             const button = document.getElementById('loadOrdersButton');
-            button.disabled = true; // Disable the button immediately after the first click
+            button.disabled = true;
+
+            document.getElementById("adminPanelContainer").innerHTML = '';
+            document.getElementById("dataContainer").innerHTML = '';
+            document.getElementById("cartContainer").innerHTML = '';
+            document.getElementById("ordersContainer").innerHTML = ''; // Clear previous data
 
             const adminPanelContainer = document.getElementById('adminPanelContainer');
             adminPanelContainer.innerHTML = ''; // Clear previous data
@@ -330,20 +386,65 @@
                     orderActions.className = 'order-actions';
 
                     const approveButton = document.createElement('button');
+
                     approveButton.textContent = 'Approve';
-                    approveButton.onclick = () => handleOrderApproval(order.orderId, order);
+                    // approveButton.onclick = () => handleOrderApproval(order.orderId, order) && loadPendingOrders();
+                    approveButton.onclick = () => {
+                        document.querySelector('.confirm').style.display = 'block';
+                        document.querySelector('.confirmButton').style.backgroundColor = '#4CAF50'
+                        document.querySelector('.confirmButton').innerHTML = `<span>Approve</span>`
+                        document.querySelector('.confirmButton').onclick = () => {
+                            document.querySelector('.confirm').style.display = 'none';
+                            handleOrderApproval(order.orderId, order);
+                            setTimeout(() => {
+                                loadPendingOrders();
+                            }, 5000); // 5000 milliseconds = 5 seconds
+
+                        }
+                    };
                     orderActions.appendChild(approveButton);
 
                     const rejectButton = document.createElement('button');
                     rejectButton.textContent = 'Reject';
                     rejectButton.style.backgroundColor = 'red';
-                    rejectButton.onclick = () => handleOrderRejection(order.orderId, order);
+                    rejectButton.onclick = () => {
+                        document.querySelector('.confirm').style.display = 'block';
+                        // document.querySelector('.confirmButton').style.display = 'block';
+                        document.querySelector('.confirmButton').style.backgroundColor = 'red'
+                        document.querySelector('.confirmButton').innerHTML = `<span>Reject</span>`
+
+                        document.querySelector('.confirmButton').onclick = () => {
+                            document.querySelector('.confirm').style.display = 'none';
+                            handleOrderRejection(order.orderId, order);
+                            setTimeout(() => {
+                                loadPendingOrders();
+                            }, 5000); // 5000 milliseconds = 5 seconds
+                        }
+
+                    };
+
+                    // rejectButton.onclick = () => handleOrderRejection(order.orderId, order) && loadPendingOrders();
+                    // rejectButton.onclick = () => loadPendingOrders();
                     orderActions.appendChild(rejectButton);
 
                     const editButton = document.createElement('button');
                     editButton.textContent = 'Edit';
                     editButton.style.backgroundColor = 'yellow';
-                    editButton.onclick = () => handleOrderEdit(order.orderId, order);
+
+                    editButton.onclick = () => {
+                        document.querySelector('.confirm').style.display = 'block';
+                        document.querySelector('.confirmButton').style.backgroundColor = 'yellow'
+                        document.querySelector('.confirmButton').innerHTML = `<span>Edit</span>`
+                        document.querySelector('.confirmButton').onclick = () => {
+                            document.querySelector('.confirm').style.display = 'none';
+                            handleOrderEdit(order.orderId, order);
+                            setTimeout(() => {
+                                loadPendingOrders();
+                            }, 5000); // 5000 milliseconds = 5 seconds
+                        }
+                    };
+
+                    // editButton.onclick = () => loadPendingOrders();
                     orderActions.appendChild(editButton);
 
                     orderElement.appendChild(orderActions);
@@ -367,12 +468,34 @@
 
         window.fetchData = async function () {
             const mobileNumber = document.getElementById('mobileNumber').value;
+            if (mobileNumber === "") {
+                alert("Please enter mobile number");
+                return;
+            }
+            document.getElementById("adminPanelContainer").innerHTML = '';
+            document.getElementById("dataContainer").innerHTML = '';
+            document.getElementById("cartContainer").innerHTML = '';
+            document.getElementById("ordersContainer").innerHTML = ''; // Clear previous data
             const dataContainer = document.getElementById('dataContainer');
             const cartContainer = document.getElementById('cartContainer');
             const ordersContainer = document.getElementById('ordersContainer');
             dataContainer.innerHTML = ''; // Clear previous data
             cartContainer.innerHTML = ''; // Clear previous cart data
             ordersContainer.innerHTML = ''; // Clear previous orders data
+            const fetchDataButton = document.getElementById('fetchDataButton');
+            // fetchDataButton.disabled = true; // Disable the button while processing
+            fetchDataButton.style.backgroundColor = 'green'
+            const goInsideButton = document.getElementById('goInsideButton');
+            // goInsideButton.disabled = true;
+            goInsideButton.style.backgroundColor = 'grey'
+            const addItemButton = document.getElementById('addItemButton');
+            // addItemButton.disabled = true;
+            addItemButton.style.backgroundColor = 'grey'
+            const loadOrdersButton = document.getElementById('loadOrdersButton');
+            // loadOrdersButton.disabled = true;
+            loadOrdersButton.style.backgroundColor = 'grey'
+
+
 
             if (mobileNumber) {
                 try {
@@ -519,19 +642,56 @@
                                 const approveButton = document.createElement('button');
                                 approveButton.textContent = 'Approve';
 
-                                approveButton.onclick = () => handleOrderApproval(orderDoc.id, orderData);
+                                approveButton.onclick = () => {
+                                    document.querySelector('.confirm').style.display = 'block';
+                                    document.querySelector('.confirmButton').style.backgroundColor = '#4CAF50'
+                                    document.querySelector('.confirmButton').innerHTML = `<span>Approve</span>`
+                                    document.querySelector('.confirmButton').onclick = () => {
+                                        document.querySelector('.confirm').style.display = 'none';
+                                        handleOrderApproval(orderDoc.id, orderData);
+                                        setTimeout(() => {
+                                            fetchData();
+                                        }, 5000); // 5000 milliseconds = 5 seconds
+
+                                    }
+                                };
                                 orderActions.appendChild(approveButton);
 
                                 const rejectButton = document.createElement('button');
                                 rejectButton.textContent = 'Reject';
                                 rejectButton.style.backgroundColor = 'red';
-                                rejectButton.onclick = () => handleOrderRejection(orderDoc.id, orderData);
+                                rejectButton.onclick = () => {
+                                    document.querySelector('.confirm').style.display = 'block';
+                                    // document.querySelector('.confirmButton').style.display = 'block';
+                                    document.querySelector('.confirmButton').style.backgroundColor = 'red'
+                                    document.querySelector('.confirmButton').innerHTML = `<span>Reject</span>`
+
+                                    document.querySelector('.confirmButton').onclick = () => {
+                                        document.querySelector('.confirm').style.display = 'none';
+                                        handleOrderRejection(orderDoc.id, orderData);
+                                        setTimeout(() => {
+                                            fetchData();
+                                        }, 5000); // 5000 milliseconds = 5 seconds
+                                    }
+
+                                };
                                 orderActions.appendChild(rejectButton);
 
                                 const editButton = document.createElement('button');
                                 editButton.textContent = 'Edit';
                                 editButton.style.backgroundColor = 'yellow';
-                                editButton.onclick = () => handleOrderEdit(orderDoc.id, orderData);
+                                editButton.onclick = () => {
+                                    document.querySelector('.confirm').style.display = 'block';
+                                    document.querySelector('.confirmButton').style.backgroundColor = 'yellow'
+                                    document.querySelector('.confirmButton').innerHTML = `<span>Edit</span>`
+                                    document.querySelector('.confirmButton').onclick = () => {
+                                        document.querySelector('.confirm').style.display = 'none';
+                                        handleOrderEdit(orderDoc.id, orderData);
+                                        setTimeout(() => {
+                                            fetchData();
+                                        }, 5000); // 5000 milliseconds = 5 seconds
+                                    }
+                                };
                                 orderActions.appendChild(editButton);
 
                                 if (orderData.status === 'Approved') {
