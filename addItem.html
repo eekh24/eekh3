@@ -91,12 +91,9 @@
     </style>
   </head>
   <body>
-    <div class="menu-container" id="menuContainer">
-      <!-- Existing items will be dynamically inserted here -->
 
-      <button id="addItemButton" onclick="addItem()">Add +</button>
-
-      <div id="dummyItem">
+    <button id="addItemButton" onclick="addItem()">Add +</button>
+    <div id="dummyItem">
         <div class="menu-row">
           <div class="menu-item" id="newItem">
             <img id="dummyImage" src="imageNotAvailable.png" alt="New Item" />
@@ -184,6 +181,12 @@
         </div>
       </div>
     </div>
+    <div class="menu-container" id="menuContainer">
+      <!-- Existing items will be dynamically inserted here -->
+
+      
+
+      
 
     <script type="module">
       // Initialize Firebase
@@ -299,6 +302,7 @@
     } catch (error) {
         console.error("Error adding item: ", error);
     }
+        location.reload();
 }
 
       async function deleteExistingItem(itemId) {
